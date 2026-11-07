@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DawnScene, type DawnHandle } from '../components/DawnScene';
+import { RoomScene } from '../components/RoomScene';
 import { Words } from '../components/ui';
 import { narrate, narratePair, playClip, sfx, stopAll, tokens } from '../lib/audio';
 import { lessonBeats, unquote, type Beat, type ImmersiveLesson, type SceneCue } from '../data/lessonTypes';
@@ -40,6 +41,7 @@ export function Presentation({ lesson, onDone, onProgress }: { lesson: Immersive
   const [rw, setRw] = useState(-1); // word being recited
   const [reached, setReached] = useState(-1); // furthest word recited, so each part appears as it is reached
   const [ws, setWs] = useState(-1); // word lit in a statement's line beneath
+  const [wl, setWl] = useState(-1); // word lit in a statement's lead in
   const [lit, setLit] = useState(0); // messengers' lights lit in this step
   const litNow = useRef(0);
   const [shot, setShot] = useState<{ cue: SceneCue; caption?: string } | null>(null);
@@ -121,6 +123,7 @@ export function Presentation({ lesson, onDone, onProgress }: { lesson: Immersive
       } else if (step.k === 'a' || step.k === 'state') {
         await sleep(500); if (stop()) return;
         scene.current?.pulse();
+        if (step.k === 'state' && step.b.lead) { await narrate(step.b.lead, { lang: 'en', onWord: x => !dead && setWl(x) }); if (stop()) return; setWl(-1); await sleep(250); if (stop()) return; }
         const [ar, en] = step.k === 'a' ? [step.b.aAr, step.b.aEn] : step.k === 'state' ? [step.b.ar, step.b.en] : ['', ''];
         if (ar) await narratePair(ar, en, x => !dead && setWa(x), x => !dead && setW(x));
         else await narrate(en, { lang: 'en', onWord: x => !dead && setW(x) });
@@ -159,8 +162,8 @@ export function Presentation({ lesson, onDone, onProgress }: { lesson: Immersive
   const ask = step.k === 'q' || step.k === 'p' || step.k === 'a' ? step.b : null;
   return (
     <div onPointerUp={tap} style={{ position: 'absolute', inset: 0, cursor: 'pointer', userSelect: 'none', color: 'var(--paper)' }}>
-      <DawnScene ref={scene} scene={cue} />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,22,18,.6) 0%, rgba(6,22,18,.2) 45%, rgba(6,22,18,0) 60%)', pointerEvents: 'none' }} />
+      {lesson.world === 'room' ? <RoomScene ref={scene} scene={cue} /> : <DawnScene ref={scene} scene={cue} />}
+      <div style={{ position: 'absolute', inset: 0, background: lesson.world === 'room' ? 'linear-gradient(180deg, rgba(42,30,14,.62) 0%, rgba(42,30,14,.45) 48%, rgba(42,30,14,0) 68%)' : 'linear-gradient(180deg, rgba(6,22,18,.6) 0%, rgba(6,22,18,.2) 45%, rgba(6,22,18,0) 60%)', pointerEvents: 'none' }} />
       <motion.div initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 2.2, ease: 'easeOut' }} style={{ position: 'absolute', inset: 0, background: '#06140f', pointerEvents: 'none' }} />
 
       <div style={{ position: 'absolute', left: 26, right: 26, top: 110, bottom: '40%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', textShadow: shadow }}>
@@ -214,6 +217,7 @@ export function Presentation({ lesson, onDone, onProgress }: { lesson: Immersive
           {step.k === 'state' && (
             <motion.div key={`state${i}`} initial={{ opacity: 0, y: 14, filter: 'blur(6px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, transition: { duration: .5 } }} transition={{ duration: 1.1 }}
               style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+              {step.b.lead && <Words className="pretty" text={step.b.lead} active={wl} style={{ font: '400 19px/1.35 var(--serif)', color: '#E8E1CE', maxWidth: 320, marginBottom: 4 }} />}
               {step.b.ar && <Words className="ar" text={step.b.ar} active={wa} style={{ font: `700 ${arSize(step.b.ar, 52)}px/1.5 var(--arabic)`, color: '#F6E7BD' }} />}
               <Words className="pretty" text={step.b.en} active={w} style={{ font: '500 26px/1.3 var(--serif)', maxWidth: 320 }} />
               {step.b.sub && <Words className="pretty" text={step.b.sub} active={ws} style={{ font: '400 19px/1.4 var(--serif)', color: '#E8E1CE', maxWidth: 320, marginTop: 8 }} />}

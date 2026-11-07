@@ -22,6 +22,7 @@ const DEFAULTS: Required<SceneCue> = {
   time: 'dawn', lapse: 'none', growth: false, storm: false, city: false,
   town: false, worship: 0, windows: 0,
   house: false, pillars: 0, pillarsLit: 0, roof: 0, parts: 0, messengers: 0, trail: 0, marks: 0, trailFull: false,
+  light: 0.5, focus: 'room', tap: false, panels: 0, shelf: 0, tags: 0, door: 0, matOpen: false, roomLit: 0,
 };
 
 // deterministic noise so the landscape is the same every visit

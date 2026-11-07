@@ -41,11 +41,11 @@ function load(): AppState {
   // deep links for demos: #tawheed/0..4 (Level 1) or #tawheed2/0..4 (Level 2), #tawheed3/0..4 (Level 3), #tawheed4/0..4 (Level 4) opens a lesson phase,
   // #home, #learn, #progress, #parent, #onboarding
   const h = location.hash.slice(1);
-  const m = /^tawheed(\d?)\/([0-4])$/.exec(h);
+  const m = /^(tawheed|fiqh)(\d?)\/([0-4])$/.exec(h);
   if (m) {
-    const idx = Math.max(1, +(m[1] || 1)) - 1, d = demo();
-    d.done[0] = idx; // earlier levels count as finished
-    return { ...d, screen: 'tawheed', lessonTi: 0, lessonIdx: idx, tawheedPhase: +m[2] };
+    const ti = m[1] === 'fiqh' ? 1 : 0, idx = Math.max(1, +(m[2] || 1)) - 1, d = demo();
+    d.done[ti] = idx; // earlier levels count as finished
+    return { ...d, screen: 'tawheed', lessonTi: ti, lessonIdx: idx, tawheedPhase: +m[3] };
   }
   if (h === 'onboarding') return fresh();
   if (['home', 'learn', 'progress', 'parent'].includes(h)) return { ...demo(), tab: h as Tab, learnTopic: 0 };
@@ -56,6 +56,8 @@ function load(): AppState {
       // saves from before the flag existed: anyone already past setup counts as onboarded
       const onboarded = saved.onboarded ?? !String(saved.screen ?? 'ob0').startsWith('ob');
       const s: AppState = { ...fresh(), ...saved, onboarded };
+      // Fiqh became a path of levels: progress saved before then counted sample lessons, so it starts again at Level 1
+      try { if (!localStorage.getItem('seediman:fiqh-levels')) { s.done = s.done.slice(); s.done[1] = 0; s.at = atFor(s.done); localStorage.setItem('seediman:fiqh-levels', '1'); } } catch { /* private mode */ }
       const screen = openScreen(s);
       return screen === 'app' ? { ...s, screen, tab: 'home' } : s; // returning users always land on Home
     }

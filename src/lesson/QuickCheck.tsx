@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DawnScene, type DawnHandle } from '../components/DawnScene';
+import { RoomScene } from '../components/RoomScene';
 import { Words, useNarration } from '../components/ui';
 import { sfx } from '../lib/audio';
 import { LanternRow } from './PracticeControl';
@@ -40,12 +41,12 @@ export function QuickCheck({ lesson, onDone }: { lesson: ImmersiveLesson; onDone
   const base = QC.scene.glow ?? 0.62, fin = QC.final.glow ?? 1;
   const answered = Math.max(0, Math.min(N, i + (solved && i >= 0 && i < N ? 1 : 0)));
   // Level 5: each correct answer lights one window in the neighbourhood; at the end the light spreads across all of it
-  const cue = complete ? { ...QC.scene, ...QC.final } : { ...QC.scene, glow: base + (fin - base) * 0.6 * Math.max(0, Math.min(i, N)) / N, ...(QC.windows ? { windows: answered } : {}), ...(QC.path ? { marks: answered } : {}), ...(QC.house ? { pillarsLit: [0, 2, 4, 5][answered] } : {}) };
+  const cue = complete ? { ...QC.scene, ...QC.final } : { ...QC.scene, glow: base + (fin - base) * 0.6 * Math.max(0, Math.min(i, N)) / N, ...(QC.windows ? { windows: answered } : {}), ...(QC.path ? { marks: answered } : {}), ...(QC.room ? { roomLit: answered } : {}), ...(QC.house ? { pillarsLit: [0, 2, 4, 5][answered] } : {}) };
 
   return (
     <div onPointerDown={e => scene.current?.nudge(e.clientX, e.clientY)} style={{ position: 'absolute', inset: 0, color: 'var(--paper)', userSelect: 'none' }}>
-      <DawnScene ref={scene} scene={cue} />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,22,18,.55) 0%, rgba(6,22,18,.12) 50%, rgba(6,22,18,0) 62%)', pointerEvents: 'none' }} />
+      {lesson.world === 'room' ? <RoomScene ref={scene} scene={cue} /> : <DawnScene ref={scene} scene={cue} />}
+      <div style={{ position: 'absolute', inset: 0, background: lesson.world === 'room' ? 'linear-gradient(180deg, rgba(42,30,14,.6) 0%, rgba(42,30,14,.4) 50%, rgba(42,30,14,.1) 75%)' : 'linear-gradient(180deg, rgba(6,22,18,.55) 0%, rgba(6,22,18,.12) 50%, rgba(6,22,18,0) 62%)', pointerEvents: 'none' }} />
       <motion.div initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 1.6 }} style={{ position: 'absolute', inset: 0, background: 'var(--paper)', pointerEvents: 'none' }} />
 
       {/* Level 4: the three lanterns stand dim at dusk; each correct answer lights one, and the last joins them in a beam */}
@@ -90,11 +91,11 @@ export function QuickCheck({ lesson, onDone }: { lesson: ImmersiveLesson; onDone
                 {complete && (
                   <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.4 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, marginTop: 10 }}>
                     <motion.div initial={{ scale: .6 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 14 }}
-                      style={{ width: QC.lanterns || QC.windows || QC.house || QC.path ? 104 : 84, height: QC.lanterns || QC.windows || QC.house || QC.path ? 104 : 84, borderRadius: '50%', background: 'radial-gradient(circle at 40% 35%, #FFF6DC, #D9B45E 60%, #A8894C)', boxShadow: '0 0 0 6px rgba(251,249,243,.15), 0 0 40px rgba(246,225,170,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      style={{ width: QC.lanterns || QC.windows || QC.house || QC.path || QC.room ? 104 : 84, height: QC.lanterns || QC.windows || QC.house || QC.path || QC.room ? 104 : 84, borderRadius: '50%', background: 'radial-gradient(circle at 40% 35%, #FFF6DC, #D9B45E 60%, #A8894C)', boxShadow: '0 0 0 6px rgba(251,249,243,.15), 0 0 40px rgba(246,225,170,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <img src="seediman-mark.png" alt="" style={{ width: 50, mixBlendMode: 'multiply' }} />
                     </motion.div>
                     <span className="eyebrow" style={{ color: 'var(--gold-light)' }}>{lesson.topic}</span>
-                    <span className="serif" style={{ font: `500 ${QC.lanterns || QC.windows || QC.house || QC.path ? 40 : 34}px/1.1 var(--serif)` }}>{QC.badge}</span>
+                    <span className="serif" style={{ font: `500 ${QC.lanterns || QC.windows || QC.house || QC.path || QC.room ? 40 : 34}px/1.1 var(--serif)` }}>{QC.badge}</span>
                     {QC.summaryAr?.map(a => <span key={a} className="ar" style={{ font: `700 ${a.length > 30 ? 19 : 26}px/1.7 var(--arabic)`, color: '#F6E7BD', maxWidth: 320 }}>{a}</span>)}
                     {QC.summaryEn && <span className="pretty" style={{ font: '500 15px/1.45 var(--ui)', color: '#FFFBF0', maxWidth: 310, textShadow: '0 1px 3px rgba(4,20,16,.85), 0 2px 18px rgba(4,20,16,.8)' }}>{QC.summaryEn}</span>}
                     <span className="serif pretty" style={{ font: 'italic 400 18px/1.55 var(--serif)', color: '#FFFBF0', maxWidth: 300, textShadow: '0 1px 3px rgba(4,20,16,.85), 0 2px 18px rgba(4,20,16,.8)' }}>{QC.summary}</span>

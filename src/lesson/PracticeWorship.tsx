@@ -40,11 +40,11 @@ export function Sort({ act, onComplete }: { act: Extract<Activity, { k: 'sort' }
   return (
     <LayoutGroup id={`sort-${act.title}`}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${act.bins.length}, 1fr)`, gap: act.bins.length > 2 ? 6 : 10 }}>
           {act.bins.map((label, b) => (
             <div key={b} ref={el => { bins.current[b] = el; }} data-bin={b} onClick={() => sel !== null && put(sel, b)}
               style={{ minHeight: 170, padding: '10px 8px', borderRadius: 20, display: 'flex', flexDirection: 'column', gap: 8, cursor: sel !== null ? 'pointer' : 'default',
-                border: `2px dashed ${sel !== null ? 'var(--gold-light)' : 'var(--line-3)'}`, background: b === 0 ? 'var(--ok-bg)' : 'var(--sand)', transition: 'border-color .2s' }}>
+                border: `2px dashed ${sel !== null ? 'var(--gold-light)' : 'var(--line-3)'}`, background: b === 0 ? 'var(--ok-bg)' : b === 2 ? '#E8EEF6' : 'var(--sand)', transition: 'border-color .2s' }}>
               <span style={{ font: '800 14px var(--ui)', color: b === 0 ? 'var(--leaf)' : 'var(--sand-ink)', textAlign: 'center', letterSpacing: '.02em' }}>{label}</span>
               {placed.filter(it => items[it].bin === b).map(it => (
                 <motion.div key={it} layoutId={`s${it}`} style={{ ...card(true), flexDirection: 'column', alignItems: 'stretch', gap: 2 }}>
@@ -180,6 +180,7 @@ export function Moments({ act, onComplete }: { act: Extract<Activity, { k: 'mome
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <Words text={cur.label} active={labelOn ? m.en : -1} onLight style={{ font: '700 14px var(--ui)', color: 'var(--sand-ink)' }} />
                 <Words className="pretty" text={cur.line} active={lineW >= 0 ? m.en : -1} onLight style={{ font: '500 16px/1.4 var(--serif)', color: 'var(--ink)' }} />
+                {cur.ar && <span className="ar" style={{ font: '700 20px/1.6 var(--arabic)', color: 'var(--leaf)' }}>{cur.ar}</span>}
               </div>
             </motion.div>
           ) : (

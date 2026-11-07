@@ -1,5 +1,5 @@
 import type { ImmersiveLesson } from './lessonTypes';
-import { TAWHEED_LEVELS } from './lessons';
+import { FIQH_LEVELS, TAWHEED_LEVELS } from './lessons';
 import { checkQuestions } from './lessonTypes';
 
 export type Step =
@@ -34,14 +34,8 @@ export const TOPICS: Topic[] = [
     others: ['Allah is One', 'Worship Him alone', 'His Beautiful Names', 'The three categories', 'Understanding shirk', 'Review'],
   },
   {
-    name: 'Fiqh', p: 'g',
-    others: ['What is fiqh?', 'Purity (ṭahārah)', 'Types of water', 'What breaks wudu', 'Ghusl', 'Tayammum', 'The five prayers', 'Times of prayer', 'Review'],
-    lesson: { kind: 'steps', title: 'How to make wudu', steps: [
-      { t: 'read', title: 'Getting ready for salah', body: ['Wudu is the washing we do before we pray.', 'The Prophet ﷺ taught that no prayer is accepted without purification (Ṣaḥīḥ Muslim).', 'Begin with the intention in your heart and say “Bismillāh”.'] },
-      { t: 'order', q: 'Put the steps of wudu in order', items: ['Wash hands', 'Rinse mouth & nose', 'Wash face', 'Wash arms to elbows', 'Wipe head & ears', 'Wash feet to ankles'] },
-      { t: 'mcq', q: 'How many times is it sunnah to wash most parts?', opts: ['Only once', 'Up to three times', 'Seven times'], a: 1, why: 'Washing once is enough; the Prophet ﷺ often washed up to three times.' },
-      { t: 'mcq', q: 'True or false: wiping the head is part of wudu.', opts: ['True', 'False'], a: 0, why: 'Allah mentions wiping the head in Surah al-Mā\'idah, verse 6.' },
-    ] },
+    name: 'Fiqh', p: 'g', levels: FIQH_LEVELS,
+    others: ['Cleanliness', 'The steps of wudu', 'Types of water', 'What breaks wudu', 'Ghusl', 'Tayammum', 'The five prayers', 'Times of prayer', 'Review'],
   },
   {
     name: 'Hadith', p: 'a',
@@ -102,8 +96,8 @@ export type Level = typeof LEVELS[number];
 /** lessons already completed per topic at each starting level (Tawheed Level 1 is always the first lesson). */
 export const START: Record<'Seed' | 'Sprout' | 'Sapling', number[]> = {
   Seed: [0, 0, 0, 0, 0, 0],
-  Sprout: [0, 2, 1, 2, 1, 1],
-  Sapling: [0, 3, 2, 4, 1, 1],
+  Sprout: [0, 0, 1, 2, 1, 1],
+  Sapling: [0, 0, 2, 4, 1, 1],
 };
 
 export const stageOf = (p: number): Level => (p >= 0.75 ? 'Tree' : p >= 0.4 ? 'Sapling' : p >= 0.15 ? 'Sprout' : 'Seed');

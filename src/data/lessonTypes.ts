@@ -51,6 +51,16 @@ export interface SceneCue {
   trail?: number;     // lights along the path toward the distant city (0 … 14)
   marks?: number;     // brighter markers along that path, one per Quick Check answer (0 … 3)
   trailFull?: boolean; // the whole path glows
+  // Fiqh: the calm room (world: 'room')
+  light?: number;     // how bright the morning room is (0 … 1)
+  focus?: 'room' | 'tap' | 'shelf' | 'door' | 'mat'; // where the camera rests
+  tap?: boolean;      // water runs from the tap and a drop lights up
+  panels?: number;    // the two soft panels of light: none, wudu, both (0 … 2)
+  shelf?: number;     // objects on the shelf: tap, hose, stones, tissue (0 … 4)
+  tags?: number;      // glows under the water and under the stones and tissue (0 … 2)
+  door?: number;      // the door: plain, softly lit, open a little with light (0 … 2)
+  matOpen?: boolean;  // the prayer mat opens flat and clean
+  roomLit?: number;   // Quick Check: parts of the room lit, one per answer (0 … 3)
 }
 
 /**
@@ -124,7 +134,7 @@ export type Beat =
       /** light one more of the messengers' lights as each of these names is spoken in that line */
       lights?: { line: number; names: string[] } }
   | { k: 'ask'; qAr?: string; qEn: string; aAr?: string; aEn: string; cueQ?: SceneCue; cueA?: SceneCue }
-  | { k: 'state'; ar?: string; en: string; cue?: SceneCue; /** one further line beneath, read after `en` */ sub?: string }
+  | { k: 'state'; ar?: string; en: string; cue?: SceneCue; /** one further line beneath, read after `en` */ sub?: string; /** an English lead in, read first and shown small above */ lead?: string }
   /** the Quran itself: a complete ayah recited, its words lit, its meaning beneath each part */
   | { k: 'recite'; evidence: Evidence; cue?: SceneCue }
   /** words that appear quietly one at a time, each lighting a small light over the neighbourhood (Level 5) */
@@ -133,7 +143,7 @@ export type Beat =
 /** `keep` saves the recording so a parent can play it back from the Parent view */
 export interface SpeakItem { prompt: string; promptAr?: string; image?: string; modelAr?: string; modelEn?: string; keep?: boolean; /** longest recording, default 8 */ seconds?: number }
 /** a tappable moment in a picture: its box as [x, y, w, h] in percent, and one line read when it is tapped */
-export interface MomentSpot { id: string; label: string; line: string; box: [number, number, number, number]; /** Level 6: the pillar of the house this moment lights */ pillar?: number }
+export interface MomentSpot { id: string; label: string; line: string; /** an Arabic word shown with the line */ ar?: string; box: [number, number, number, number]; /** Level 6: the pillar of the house this moment lights */ pillar?: number }
 export interface BlessingSpot { id: string; label: string; ar?: string; box?: [number, number, number, number] }
 
 export type Activity =
@@ -156,11 +166,13 @@ export type Activity =
   /** the unit finale: sort statements into the three lanterns (Creates, Provides, Controls) */
   | { k: 'lanterns'; title: string; hint: string; names: [string, string, string]; cards: { text: string; lantern: 0 | 1 | 2 }[]; perLantern: number; ar: string; en: string }
   // Level 7
+  /** an Arabic line is heard (a dua read aloud, or an ayah recited) and the child picks its meaning from the pool's meanings */
+  | { k: 'hear'; title: string; hint: string; items: { ar: string; en: string; evidence?: Evidence }[] }
   /** a short question with its own options; exactly one (`answer`) is correct */
   | { k: 'choose'; title: string; hint: string; items: { q: string; options: string[]; answer: number }[] }
   // Level 5
   /** drag each card into one of two boxes; `why` is one sentence the child can open after a right drop */
-  | { k: 'sort'; title: string; hint: string; bins: [string, string]; items: { ar?: string; en: string; bin: 0 | 1; why?: string }[]; sample?: number; whyLabel?: string }
+  | { k: 'sort'; title: string; hint: string; bins: [string, string] | [string, string, string]; items: { ar?: string; en: string; bin: 0 | 1 | 2; why?: string }[]; sample?: number; whyLabel?: string }
   /** a calm exploration of one picture: each moment opens a close view and one line; no timer, score or ending */
   | { k: 'moments'; title: string; hint: string; intro: string; image: string; alt: string; spots: MomentSpot[]; line: string; house?: boolean; aspect?: number };
 
@@ -175,6 +187,8 @@ export interface ImmersiveLesson {
   topic: string;
   title: string;
   minutes: number;
+  /** the Presentation and Quick Check world: the dawn landscape (default) or the calm room (Fiqh) */
+  world?: 'dawn' | 'room';
   pillars: Pillar[];
   presentation: {
     predict: string;
@@ -205,6 +219,8 @@ export interface ImmersiveLesson {
     house?: boolean;
     /** each correct answer lights a marker along the path; the last makes the whole path glow (Level 7) */
     path?: boolean;
+    /** each correct answer lights one part of the room; the last opens the prayer mat (Fiqh) */
+    room?: boolean;
     /** the meaning of `summaryAr`, shown beneath it */
     summaryEn?: string;
   };

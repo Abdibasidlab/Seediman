@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import { ENCOURAGE, type Activity, type ImmersiveLesson, type SpeakItem } from '../data/lessonTypes';
 import { ListenBtn, SpeakerIcon, Words, useNarration } from '../components/ui';
-import { burstOn, sfx, stopAll } from '../lib/audio';
+import { burstOn, narrate, playClip, sfx, stopAll } from '../lib/audio';
 import { LookAround } from './LookAround';
 import { Blessings, Order, WordBank } from './PracticeMore';
 import { AyahMeaning, Lanterns, Scenes } from './PracticeControl';
@@ -15,7 +15,7 @@ const chunk = <T,>(a: T[], n: number) => Array.from({ length: Math.ceil(a.length
 
 /** how many first-try answers an activity can earn (speaking and exploring aren't scored) */
 const scoreOf = (a: Activity, lesson: ImmersiveLesson) =>
-  a.k === 'match' || a.k === 'arabic' ? Math.min(a.sample ?? Infinity, a.pairs.length) : a.k === 'complete' || a.k === 'wordbank' || a.k === 'order' || a.k === 'choose' ? a.items.length
+  a.k === 'match' || a.k === 'arabic' ? Math.min(a.sample ?? Infinity, a.pairs.length) : a.k === 'complete' || a.k === 'wordbank' || a.k === 'order' || a.k === 'choose' || a.k === 'hear' ? a.items.length
     : a.k === 'build' ? a.sentences.length : a.k === 'listen' ? Math.min(a.sample ?? Infinity, listenItems(a, lesson).length)
     : a.k === 'ayahMeaning' || a.k === 'scenes' ? Math.min(a.sample ?? 3, a.items.length) : a.k === 'sort' ? Math.min(a.sample ?? Infinity, a.items.length) : 0;
 
@@ -65,6 +65,7 @@ export function Practice({ lesson, onDone, onProgress }: { lesson: ImmersiveLess
             {A.k === 'complete' && <Complete items={A.items} onComplete={result} />}
             {A.k === 'listen' && <Listen items={listenItems(A, lesson)} sample={A.sample} others={A.others} onComplete={result} />}
             {A.k === 'choose' && <Choose items={A.items} onComplete={result} />}
+            {A.k === 'hear' && <Hear items={A.items} onComplete={result} />}
             {A.k === 'build' && <Build sentences={A.sentences} onComplete={result} />}
             {A.k === 'speak' && <Speak items={speakItems(A, lesson)} lessonTitle={`${lesson.topic} Level ${lesson.level}`} onComplete={() => result(0)} />}
             {A.k === 'look' && <LookAround act={A} onComplete={() => result(0)} />}
@@ -250,6 +251,38 @@ function Complete({ items, onComplete }: { items: Extract<Activity, { k: 'comple
 }
 
 /* ---------------- listen and choose ---------------- */
+/* ---------------- hear an Arabic line, find its meaning (no reading needed) ---------------- */
+function Hear({ items, onComplete }: { items: Extract<Activity, { k: 'hear' }>['items']; onComplete: (n: number) => void }) {
+  const order = useMemo(() => shuffled(items), [items]);
+  const s = useSequence(order.length, onComplete);
+  const [playing, setPlaying] = useState(false);
+  const p = order[s.i];
+  const opts = useMemo(() => shuffled(items.map(x => x.en)), [s.i]);
+  // an ayah is recited by the reciter; a dua is read by the narrator
+  const play = async () => {
+    stopAll(); setPlaying(true);
+    if (p.evidence?.audio) await playClip(p.evidence.audio, p.evidence.words.map(w => w.t ?? 0), Infinity, () => {});
+    else await narrate(p.ar, { lang: 'ar' });
+    setPlaying(false);
+  };
+  useEffect(() => { const t = setTimeout(play, 400); return () => { clearTimeout(t); stopAll(); }; }, [s.i]);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Counter i={s.i} n={order.length} />
+      <button onClick={play} aria-label="Hear it again" style={{ alignSelf: 'center', width: 96, height: 96, borderRadius: '50%', border: 0, cursor: 'pointer', background: playing ? 'var(--leaf)' : 'var(--ink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .2s' }}>
+        <SpeakerIcon size={38} />
+      </button>
+      <div dir="rtl" className="ar" style={{ textAlign: 'center', font: `700 ${p.ar.length > 30 ? 22 : 30}px/1.7 var(--arabic)`, color: 'var(--ink)' }}>{p.ar}</div>
+      {opts.map((en, k) => (
+        <button key={en} ref={el => { s.refs.current[k] = el; }} onClick={() => s.choose(en === p.en, k)} className={s.wrong === k ? 'shake' : ''}
+          style={{ minHeight: 60, padding: '12px 16px', borderRadius: 16, cursor: 'pointer', textAlign: 'left', font: '700 16px/1.35 var(--ui)', color: 'var(--ink)', border: `2px solid ${s.solved && en === p.en ? 'var(--leaf)' : 'var(--line-2)'}`, background: s.solved && en === p.en ? 'var(--ok-bg)' : '#fff' }}>
+          “{en}”
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ---------------- a short question with its own two options, read aloud ---------------- */
 function Choose({ items, onComplete }: { items: Extract<Activity, { k: 'choose' }>['items']; onComplete: (n: number) => void }) {
   const order = useMemo(() => shuffled(items), [items]);

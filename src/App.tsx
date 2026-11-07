@@ -73,7 +73,7 @@ export default function App() {
     ['Home (demo account)', () => replace(demo())],
     ['Progress', () => replace({ ...demo(), tab: 'progress' })],
     ['Parent view', () => replace({ ...demo(), tab: 'parent' })],
-    ['Lesson: Fiqh (order steps)', () => { const d = demo(); openLesson(1, d.done[1], 0, d); }],
+    ['Fiqh Level 1', () => { const d = demo(); openLesson(1, 0, 0, d); }],
   ];
   const dark = s.screen === 'tawheed' && (phase === 0 || phase === 4);
   const pl = s.screen === 'tawheed' ? lessonAt(s.lessonTi, s.lessonIdx, s.at[s.lessonTi]) : null;

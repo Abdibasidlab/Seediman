@@ -11,8 +11,9 @@ import { TAWHEED_4 } from '../src/data/tawheed4.ts';
 import { TAWHEED_5 } from '../src/data/tawheed5.ts';
 import { TAWHEED_6 } from '../src/data/tawheed6.ts';
 import { TAWHEED_7 } from '../src/data/tawheed7.ts';
+import { FIQH_1 } from '../src/data/fiqh1.ts';
 
-const LESSONS = [TAWHEED_1, TAWHEED_2, TAWHEED_3, TAWHEED_4, TAWHEED_5, TAWHEED_6, TAWHEED_7]; // add new levels here too
+const LESSONS = [TAWHEED_1, TAWHEED_2, TAWHEED_3, TAWHEED_4, TAWHEED_5, TAWHEED_6, TAWHEED_7, FIQH_1]; // add new levels here too
 import { narrationKey } from '../src/lib/narrationKey.ts';
 
 const MODEL = 'gemini-3.1-flash-tts-preview';
@@ -39,7 +40,7 @@ for (const L of LESSONS) {
   for (const b of lessonBeats(L)) {
     if (b.k === 'say') b.lines.forEach(t => add('en', t));
     if (b.k === 'ask') { both(b.qAr, b.qEn); both(b.aAr, b.aEn); }
-    if (b.k === 'state') { both(b.ar, b.en); if (b.sub) add('en', b.sub); }
+    if (b.k === 'state') { if (b.lead) add('en', b.lead); both(b.ar, b.en); if (b.sub) add('en', b.sub); }
     if (b.k === 'recite') add('en', unquote(b.evidence.en));
     if (b.k === 'list' && b.speak) b.items.forEach(t => add(b.speak!, t));
   }
@@ -61,6 +62,7 @@ for (const L of LESSONS) {
     if (a.k === 'order' && a.reveal) both(a.reveal.ar, a.reveal.en);
     if (a.k === 'scenes') a.items.forEach(it => add('en', it.scene));
     if (a.k === 'choose') a.items.forEach(it => add('en', it.q));
+    if (a.k === 'hear') a.items.forEach(it => { if (!it.evidence) add('ar', it.ar); });
     if (a.k === 'lanterns') both(a.ar, a.en);
     if (a.k === 'match' && a.meanings) Object.values(a.meanings).forEach(t => add('en', t));
     if (a.k === 'sort') a.items.forEach(it => { both(it.ar, it.en); if (it.why) add('en', it.why); });
