@@ -133,7 +133,7 @@ export const TAWHEED_2: ImmersiveLesson = {
       pairs: [['Where is Allah?', 'Above the heaven'], ['Who created you?', 'He created me'], ['Who created everything?', 'He created everything'], ['Who created your hearing and sight?', 'He created my hearing and sight']] },
     { k: 'complete', title: 'Complete the Answer', hint: 'Choose the word that completes each answer.',
       items: [
-        { before: 'Allah is above the', after: '.', answer: 'heaven', choices: ['heaven', 'earth', 'mountain'] },
+        { before: 'Where is Allah? Allah is', after: '.', answer: 'above the heaven', choices: ['the Creator', 'above the heaven', 'One'] },
         { before: 'Who created you? Allah', after: 'me.', answer: 'created', choices: ['guided', 'created', 'blessed'] },
         { before: 'Allah created my', after: 'and my sight.', answer: 'hearing', choices: ['hearing', 'homework', 'toys'] },
       ] },
