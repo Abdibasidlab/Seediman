@@ -1,5 +1,9 @@
-import { LEVELS, PAL, PQ, TOPICS } from '../data/topics';
+import { useEffect, useMemo } from 'react';
+import { LEVELS, PAL, PLACEMENT, TOPICS } from '../data/topics';
+import { narrate, stopAll } from '../lib/audio';
 import { levelStart, type AppState } from '../lib/store';
+
+const N = PLACEMENT.length;
 
 const ORDER = ['ob0', 'ob1', 'ob2', 'ob3', 'ob4', 'ob5', 'ob6', 'ob7'] as const;
 type Set = (p: Partial<AppState>) => void;
@@ -13,18 +17,33 @@ export function Onboarding({ s, set, onLogin }: { s: AppState; set: Set; onLogin
   const valid: Record<string, boolean> = { ob1: !!s.role, ob2: !!(s.name.trim() && s.age), ob3: s.exp !== null, ob4: s.focus.length > 0 };
   const ok = valid[s.screen] ?? true;
   const next = () => { if (ok && obi < 7) set({ screen: ORDER[obi + 1] }); };
-  const back = () => { if (obi > 0) set({ screen: ORDER[obi - 1], pq: 0, sc: 0 }); };
+  const back = () => { if (obi > 0) set({ screen: ORDER[obi - 1], pq: 0, sc: 0, pMiss: null }); };
   const cta = <button className="btn" disabled={!ok} onClick={next}>Continue</button>;
 
   const computeLevel = (score: number | null) => {
-    const pts = (s.exp ?? 1) + (score ?? 1);
+    const pts = (s.exp ?? 1) + (score === null ? 1 : score >= 5 ? 2 : score >= 3 ? 1 : 0);
     const level = pts <= 1 ? 'Seed' : pts <= 3 ? 'Sprout' : 'Sapling';
     return { level, ...levelStart(level), pScore: score } as const;
   };
-  const pickPQ = (i: number) => {
-    const sc = s.sc + (PQ[s.pq].a === i ? 1 : 0);
-    if (s.pq < 2) set({ pq: s.pq + 1, sc }); else set({ screen: 'ob7', pq: 0, sc: 0, ...computeLevel(sc) });
+  // Tawheed starts at the first level whose question was missed; the levels before it count as done
+  const place = (score: number | null, miss: number | null) => {
+    const plan = computeLevel(score);
+    const start = score === null ? 0 : miss ?? N - 1;
+    const done = plan.done.slice(); done[0] = start;
+    return { ...plan, done };
   };
+  const pickPQ = (i: number) => {
+    const right = PLACEMENT[s.pq].a === i;
+    const sc = s.sc + (right ? 1 : 0), pMiss = s.pMiss ?? (right ? null : s.pq);
+    if (s.pq < N - 1) set({ pq: s.pq + 1, sc, pMiss }); else { stopAll(); set({ screen: 'ob7', pq: 0, sc: 0, pMiss, ...place(sc, pMiss) }); }
+  };
+  // a fresh order of options for each question, and the question read aloud
+  const opts = useMemo(() => PLACEMENT[s.pq].opts.map((o, k) => ({ ...o, k })).sort(() => Math.random() - 0.5), [s.pq, s.screen]);
+  useEffect(() => {
+    if (s.screen !== 'ob6') return;
+    const t = setTimeout(() => narrate(PLACEMENT[s.pq].q, { lang: 'en' }), 600);
+    return () => { clearTimeout(t); stopAll(); };
+  }, [s.pq, s.screen]);
 
   return (
     <>
@@ -126,17 +145,20 @@ export function Onboarding({ s, set, onLogin }: { s: AppState; set: Set; onLogin
         <Col gap={14}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, background: 'var(--sand)' }}>
             <img src="seediman-mark.png" alt="" style={{ width: 34, mixBlendMode: 'multiply' }} />
-            <span style={{ font: '600 14px/1.4 var(--ui)', color: 'var(--sand-ink)' }}>Now hand the phone to {s.name || 'your child'} for a 3-question check.</span>
+            <span style={{ font: '600 14px/1.4 var(--ui)', color: 'var(--sand-ink)' }}>Now hand the phone to {s.name || 'your child'} for a short check: {N} questions, about 3 minutes.</span>
           </div>
-          <span className="eyebrow" style={{ color: 'var(--muted-2)', marginTop: 10 }}>Quick check · {s.pq + 1} of 3</span>
-          <span className="serif pretty" style={{ font: '500 28px/1.2 var(--serif)' }}>{PQ[s.pq].q}</span>
+          <span className="eyebrow" style={{ color: 'var(--muted-2)', marginTop: 10 }}>Quick check · {s.pq + 1} of {N} · Level {PLACEMENT[s.pq].level}</span>
+          <span className="serif pretty" style={{ font: '500 26px/1.2 var(--serif)' }}>{PLACEMENT[s.pq].q}</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 6 }}>
-            {PQ[s.pq].opts.map((label, i) => (
-              <button key={label} className="optcard" onClick={() => pickPQ(i)} style={{ height: 58, justifyContent: 'center', alignItems: 'center', borderRadius: 16, font: '700 17px var(--ui)' }}>{label}</button>
+            {opts.map(o => (
+              <button key={o.en} className="optcard" onClick={() => pickPQ(o.k)} style={{ minHeight: 58, padding: '12px 16px', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: 2, borderRadius: 16, textAlign: 'left' }}>
+                <span style={{ font: '700 15px/1.35 var(--ui)' }}>{o.en}</span>
+                {o.ar && <span className="ar" style={{ font: '700 18px/1.6 var(--arabic)', color: 'var(--leaf)', alignSelf: 'flex-end' }}>{o.ar}</span>}
+              </button>
             ))}
           </div>
           <span style={{ flex: 1 }} />
-          <button className="link-btn" onClick={() => set({ screen: 'ob7', ...computeLevel(null) })}>Not sure? Skip the check</button>
+          <button className="link-btn" onClick={() => { stopAll(); set({ screen: 'ob7', pMiss: null, ...place(null, null) }); }}>Not sure? Skip the check</button>
         </Col>
       )}
 
@@ -160,7 +182,8 @@ export function Onboarding({ s, set, onLogin }: { s: AppState; set: Set; onLogin
           <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
             <Row l="Daily goal" r={`${s.goal} min a day`} />
             <Row l="Starting with" r={s.focus.join(', ')} />
-            <Row l="Check result" r={s.pScore === null ? 'Skipped' : `${s.pScore} of 3 correct`} last />
+            <Row l="Tawheed starts at" r={`Level ${s.done[0] + 1}: ${PLACEMENT[Math.min(s.done[0], N - 1)].title}`} />
+            <Row l="Check result" r={s.pScore === null ? 'Skipped' : `${s.pScore} of ${N} correct`} last />
           </div>
           <span style={{ flex: 1 }} />
           <button className="btn" onClick={() => set({ screen: 'app', tab: 'home', onboarded: true, learnTopic: Math.max(0, TOPICS.findIndex(t => t.name === s.focus[0])) })}>Start learning</button>

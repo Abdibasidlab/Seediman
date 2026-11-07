@@ -1,5 +1,6 @@
 import type { ImmersiveLesson } from './lessonTypes';
 import { TAWHEED_LEVELS } from './lessons';
+import { checkQuestions } from './lessonTypes';
 
 export type Step =
   | { t: 'read'; title: string; body: string[]; quote?: string; meaning?: string; ref?: string }
@@ -84,11 +85,16 @@ export const TOPICS: Topic[] = [
   },
 ];
 
-export const PQ = [
-  { q: 'How many times a day do Muslims pray?', opts: ['3', '5', '7'], a: 1 },
-  { q: 'What do we say before we eat?', opts: ['Alḥamdulillāh', 'Bismillāh', 'SubḥānAllāh'], a: 1 },
-  { q: 'What does “Tawheed” mean?', opts: ['Believing Allah is One', 'Giving charity', 'Fasting'], a: 0 },
-];
+/**
+ * The onboarding knowledge check: one question per Tawheed level, taken from that level's own Quick Check, in level order.
+ * The other options are the level's other Quick Check answers, so every option is a true sentence and only one answers it.
+ * Each entry picks the question whose answer is not also implied by another option.
+ */
+const PLACEMENT_PICK: Record<number, number> = { 1: 0, 2: 0, 3: 2, 4: 2, 5: 0, 6: 1, 7: 2 };
+export const PLACEMENT = TAWHEED_LEVELS.map(L => {
+  const qs = checkQuestions(L), k = PLACEMENT_PICK[L.level] ?? 0;
+  return { level: L.level, title: L.title, q: qs[k].qEn, opts: qs.map(x => ({ en: x.aEn, ar: x.aAr })), a: k };
+});
 
 export const LEVELS = ['Seed', 'Sprout', 'Sapling', 'Tree'] as const;
 export type Level = typeof LEVELS[number];

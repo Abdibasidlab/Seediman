@@ -9,7 +9,7 @@ export interface AppState {
   /** set once the parent finishes setup; from then on the app always opens on Home */
   onboarded: boolean;
   role: 'parent' | 'teacher' | null; name: string; age: number | null; exp: number | null;
-  focus: string[]; goal: number; pq: number; sc: number; pScore: number | null; level: Level;
+  focus: string[]; goal: number; pq: number; sc: number; /** the first knowledge check question missed (its level is where Tawheed starts) */ pMiss: number | null; pScore: number | null; level: Level;
   done: number[]; at: number[]; fin: boolean[];
   streak: number; today: number; hist: number[]; acc: [number, number];
   learnTopic: number; lessonTi: number; tawheedPhase: number;
@@ -23,7 +23,7 @@ const atFor = (done: number[]) => done.map((d, i) => (TOPICS[i].levels ? 0 : d))
 
 export function fresh(): AppState {
   const done = START.Sprout.slice();
-  return { screen: 'ob0', tab: 'home', onboarded: false, role: null, name: '', age: null, exp: null, focus: ['Tawheed', 'Fiqh'], goal: 10, pq: 0, sc: 0, pScore: null, level: 'Sprout',
+  return { screen: 'ob0', tab: 'home', onboarded: false, role: null, name: '', age: null, exp: null, focus: ['Tawheed', 'Fiqh'], goal: 10, pq: 0, sc: 0, pMiss: null, pScore: null, level: 'Sprout',
     done, at: atFor(done), fin: TOPICS.map(() => false), streak: 0, today: 0, hist: [0, 0, 0, 0, 0, 0], acc: [0, 0],
     learnTopic: 0, lessonTi: 0, tawheedPhase: 0, lessonIdx: 0, last: null };
 }
