@@ -1,0 +1,11 @@
+art
+shots
+scripts
+*.stackdump
+shots$n.png
+dist
+node_modules
+.env*
+neon.ts
+.neon
+db

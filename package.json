@@ -1,0 +1,38 @@
+{
+  "name": "seediman",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host",
+    "narration": "node scripts/gen-narration.ts",
+    "align-quran": "node scripts/align-quran.ts",
+    "fetch-ayah": "node scripts/fetch-ayah.ts",
+    "art": "node scripts/gen-art.ts"
+  },
+  "dependencies": {
+    "@fontsource/amiri": "^5.3.0",
+    "@fontsource/figtree": "^5.3.0",
+    "@fontsource/newsreader": "^5.3.0",
+    "@neon/auth": "^0.8.2",
+    "@neon/config": "^1.13.0",
+    "@neon/env": "^2.1.0",
+    "@vercel/functions": "^3.11.0",
+    "framer-motion": "^13.4.4",
+    "jose": "^6.2.15",
+    "pg": "^8.23.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  }
+}
