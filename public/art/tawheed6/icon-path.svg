@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <!-- Placeholder for Level 6, Panel 1: a winding path of five small glowing lights. Replace with the supplied image. -->
+  <path d="M110 490C230 480 170 380 300 370S330 250 240 230S330 110 490 110" fill="none" stroke="#D9C7A4" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 26"/>
+  <g fill="#F3DFA8"><circle cx="110" cy="490" r="46"/><circle cx="208" cy="400" r="46"/><circle cx="300" cy="370" r="46"/><circle cx="262" cy="236" r="46"/><circle cx="490" cy="110" r="46"/></g>
+  <g fill="#C9A23F"><circle cx="110" cy="490" r="22"/><circle cx="208" cy="400" r="22"/><circle cx="300" cy="370" r="22"/><circle cx="262" cy="236" r="22"/><circle cx="490" cy="110" r="22"/></g>
+</svg>
